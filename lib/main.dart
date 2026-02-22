@@ -58,9 +58,9 @@ class MyAppState extends State<MyApp> {
           titleTextStyle: GoogleFonts.outfit(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: Colors.black87,
           ),
-          iconTheme: const IconThemeData(color: Colors.white),
+          iconTheme: const IconThemeData(color: Colors.black87),
         ),
       ),
       darkTheme: ThemeData(
