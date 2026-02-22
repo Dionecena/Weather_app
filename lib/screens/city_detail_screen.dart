@@ -3,17 +3,46 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:examen/models/weather.dart';
 import 'package:examen/main.dart';
 
-class CityDetailScreen extends StatelessWidget {
+class CityDetailScreen extends StatefulWidget {
   final Weather weather;
 
   const CityDetailScreen({super.key, required this.weather});
 
+  @override
+  State<CityDetailScreen> createState() => _CityDetailScreenState();
+}
+
+class _CityDetailScreenState extends State<CityDetailScreen> {
   Future<void> _openGoogleMaps() async {
     final url = Uri.parse(
-      'https://www.google.com/maps/search/?api=1&query=${weather.lat},${weather.lon}',
+      'https://www.google.com/maps/search/?api=1&query=${widget.weather.lat},${widget.weather.lon}',
     );
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
+    
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(
+          url, 
+          mode: LaunchMode.externalApplication,
+        );
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Impossible d\'ouvrir Google Maps'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erreur lors de l\'ouverture de Google Maps'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -37,7 +66,7 @@ class CityDetailScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(weather.cityName),
+        title: Text(widget.weather.cityName),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
@@ -62,11 +91,11 @@ class CityDetailScreen extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: _headerGradientColors(weather.icon, isDark),
+                  colors: _headerGradientColors(widget.weather.icon, isDark),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.12),
+                    color: Colors.black.withAlpha(30),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -75,9 +104,9 @@ class CityDetailScreen extends StatelessWidget {
               child: Column(
                 children: [
                   Hero(
-                    tag: 'weather_${weather.cityName}',
+                    tag: 'weather_${widget.weather.cityName}',
                     child: Image.network(
-                      'https://openweathermap.org/img/wn/${weather.icon}@4x.png',
+                      'https://openweathermap.org/img/wn/${widget.weather.icon}@4x.png',
                       width: 120,
                       height: 120,
                       errorBuilder: (context, error, stackTrace) {
@@ -90,7 +119,7 @@ class CityDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    '${weather.temperature.toStringAsFixed(1)}°C',
+                    '${widget.weather.temperature.toStringAsFixed(1)}°C',
                     style: TextStyle(
                       fontSize: 48,
                       fontWeight: FontWeight.bold,
@@ -99,7 +128,7 @@ class CityDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    weather.description,
+                    widget.weather.description,
                     style: TextStyle(
                       fontSize: 18,
                       color: isDark ? Colors.white70 : Colors.grey.shade700,
@@ -119,19 +148,19 @@ class CityDetailScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     _buildInfoRow(
-                        context, Icons.thermostat_rounded, 'Température', '${weather.temperature.toStringAsFixed(1)}°C'),
+                        context, Icons.thermostat_rounded, 'Température', '${widget.weather.temperature.toStringAsFixed(1)}°C'),
                     const Divider(height: 24),
                     _buildInfoRow(
-                        context, Icons.water_drop_rounded, 'Humidité', '${weather.humidity.toInt()}%'),
+                        context, Icons.water_drop_rounded, 'Humidité', '${widget.weather.humidity.toInt()}%'),
                     const Divider(height: 24),
                     _buildInfoRow(
-                        context, Icons.air_rounded, 'Vent', '${weather.windSpeed} m/s'),
+                        context, Icons.air_rounded, 'Vent', '${widget.weather.windSpeed} m/s'),
                     const Divider(height: 24),
                     _buildInfoRow(
-                        context, Icons.location_on_rounded, 'Latitude', '${weather.lat}'),
+                        context, Icons.location_on_rounded, 'Latitude', '${widget.weather.lat}'),
                     const Divider(height: 24),
                     _buildInfoRow(
-                        context, Icons.location_on_rounded, 'Longitude', '${weather.lon}'),
+                        context, Icons.location_on_rounded, 'Longitude', '${widget.weather.lon}'),
                   ],
                 ),
               ),
