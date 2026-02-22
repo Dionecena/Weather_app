@@ -1,13 +1,42 @@
 import 'package:flutter/material.dart';
-import 'package:examen/models/weather.dart';
-import 'package:examen/screens/city_detail_screen.dart';
-import 'package:examen/screens/loading_screen.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:examen/main.dart';
+import 'package:examen/models/weather.dart';
+import 'package:examen/routes/app_routes.dart';
+import 'package:examen/screens/city_detail_screen.dart';
 
-class WeatherTableScreen extends StatelessWidget {
+class WeatherTableScreen extends StatefulWidget {
   final List<Weather> weatherData;
 
   const WeatherTableScreen({super.key, required this.weatherData});
+
+  @override
+  State<WeatherTableScreen> createState() => _WeatherTableScreenState();
+}
+
+class _WeatherTableScreenState extends State<WeatherTableScreen> {
+  int? _pressedIndex;
+
+  static List<Color> _gradientColorsForTemp(double temp, bool isDark) {
+    if (temp < 10) {
+      return isDark
+          ? [const Color(0xFF1e3a5f), const Color(0xFF0d2137)]
+          : [const Color(0xFFa8d8ea), const Color(0xFF7eb8d4)];
+    }
+    if (temp < 20) {
+      return isDark
+          ? [const Color(0xFF1a2e4a), const Color(0xFF16213e)]
+          : [const Color(0xFFb8e0d2), const Color(0xFF8fc9b4)];
+    }
+    if (temp < 30) {
+      return isDark
+          ? [const Color(0xFF2d2416), const Color(0xFF1e1810)]
+          : [const Color(0xFFffeaa7), const Color(0xFFfdcb6e)];
+    }
+    return isDark
+        ? [const Color(0xFF3d2a1a), const Color(0xFF2d1f14)]
+        : [const Color(0xFFff9f43), const Color(0xFFee5a24)];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,102 +55,152 @@ class WeatherTableScreen extends StatelessWidget {
             onPressed: () => MyApp.of(context)?.toggleTheme(),
           ),
           IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const LoadingScreen()),
-              );
-            },
+            icon: const Icon(Icons.refresh_rounded),
+            tooltip: 'Recommencer l\'expérience',
+            onPressed: () => AppRoutes.restartToLoading(context),
           ),
         ],
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: weatherData.length,
+        itemCount: widget.weatherData.length,
         itemBuilder: (context, index) {
-          final weather = weatherData[index];
+          final weather = widget.weatherData[index];
+          final isPressed = _pressedIndex == index;
           return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CityDetailScreen(weather: weather),
+            onTapDown: (_) => setState(() => _pressedIndex = index),
+            onTapUp: (_) => setState(() => _pressedIndex = null),
+            onTapCancel: () => setState(() => _pressedIndex = null),
+            onTap: () => AppRoutes.toCityDetail(context, weather),
+            child: AnimatedScale(
+              scale: isPressed ? 0.98 : 1.0,
+              duration: const Duration(milliseconds: 100),
+              curve: Curves.easeInOut,
+              child: Card(
+                margin: const EdgeInsets.only(bottom: 16),
+                color: Colors.transparent,
+                elevation: 6,
+                shadowColor: Colors.black.withValues(alpha: 0.15),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
                 ),
-              );
-            },
-            child: Card(
-              margin: const EdgeInsets.only(bottom: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Image.network(
-                      'https://openweathermap.org/img/wn/${weather.icon}@2x.png',
-                      width: 60,
-                      height: 60,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Icon(Icons.cloud, size: 60);
-                      },
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: _gradientColorsForTemp(
+                          weather.temperature, isDark),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            weather.cityName,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Hero(
+                          tag: 'weather_${weather.cityName}',
+                          child: Image.network(
+                            'https://openweathermap.org/img/wn/${weather.icon}@2x.png',
+                            width: 60,
+                            height: 60,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(Icons.cloud_rounded, size: 60);
+                            },
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            weather.description,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: isDark ? Colors.white54 : Colors.grey.shade600,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(Icons.water_drop, size: 14, color: Colors.blue.shade300),
-                              const SizedBox(width: 4),
-                              Text('${weather.humidity.toInt()}%',
-                                  style: const TextStyle(fontSize: 12)),
-                              const SizedBox(width: 16),
-                              Icon(Icons.air, size: 14, color: Colors.grey.shade500),
-                              const SizedBox(width: 4),
-                              Text('${weather.windSpeed} m/s',
-                                  style: const TextStyle(fontSize: 12)),
+                              Text(
+                                weather.cityName,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark
+                                      ? Colors.white
+                                      : Colors.grey.shade900,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                weather.description,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: isDark
+                                      ? Colors.white70
+                                      : Colors.grey.shade700,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.water_drop_rounded,
+                                    size: 14,
+                                    color: isDark
+                                        ? Colors.blue.shade200
+                                        : Colors.blue.shade700,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${weather.humidity.toInt()}%',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: isDark
+                                          ? Colors.white70
+                                          : Colors.grey.shade800,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Icon(
+                                    Icons.air_rounded,
+                                    size: 14,
+                                    color: isDark
+                                        ? Colors.white54
+                                        : Colors.grey.shade600,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${weather.windSpeed} m/s',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: isDark
+                                          ? Colors.white70
+                                          : Colors.grey.shade800,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+                        Text(
+                          '${weather.temperature.toStringAsFixed(1)}°C',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: isDark
+                                ? Colors.white
+                                : Colors.grey.shade900,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: isDark ? Colors.white54 : Colors.grey.shade600,
+                        ),
+                      ],
                     ),
-                    Text(
-                      '${weather.temperature.toStringAsFixed(1)}°C',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? const Color(0xFF4facfe) : const Color(0xFF4facfe),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Icon(
-                      Icons.chevron_right,
-                      color: isDark ? Colors.white38 : Colors.grey.shade400,
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+            )
+                .animate()
+                .fadeIn(delay: (index * 80).ms, duration: 400.ms)
+                .slideY(begin: 0.15, end: 0, curve: Curves.easeOut, delay: (index * 80).ms),
           );
         },
       ),

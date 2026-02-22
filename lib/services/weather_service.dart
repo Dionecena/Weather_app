@@ -6,12 +6,13 @@ class WeatherService {
   static const String _apiKey = 'a458ae934f71b94fd2bb16a3e07397a0';
   static const String _baseUrl = 'https://api.openweathermap.org/data/2.5/weather';
 
+  /// Villes du Sénégal et d'ailleurs (préférence Sénégal).
   static final List<String> cities = [
     'Dakar',
-    'Paris',
-    'New York',
-    'Tokyo',
-    'London',
+    'Saint-Louis',
+    'Thiès',
+    'Ziguinchor',
+    'Touba',
   ];
 
   static Future<Weather> fetchWeather(String city) async {
@@ -22,7 +23,7 @@ class WeatherService {
       final json = jsonDecode(response.body);
       return Weather.fromJson(json);
     } else {
-      throw Exception('Erreur lors du chargement des données météo pour $city');
+      throw Exception('Impossible de charger la météo pour $city. Réessayez plus tard.');
     }
   }
 
