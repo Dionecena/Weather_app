@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
 /// Jauge circulaire avec dégradé et bordure arrondie.
@@ -47,7 +46,7 @@ class CircularGauge extends StatelessWidget {
               gradient: grad,
             ),
           ),
-          if (child != null) child!,
+          ?child,
         ],
       ),
     );
